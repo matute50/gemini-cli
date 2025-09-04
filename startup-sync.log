@@ -1,0 +1,8 @@
+ 
+--------------------------------------------------- 
+[09/04/2025 14:27:51,16] Iniciando script de sincronizacion. 
+--------------------------------------------------- 
+fatal: not a git repository (or any of the parent directories): .git
+[09/04/2025 14:27:54,41] ERROR: 'git pull' finalizo con codigo de error: 128. Revisa el log. 
+[09/04/2025 14:27:54,41] Script de sincronizacion finalizado. 
+--------------------------------------------------- 

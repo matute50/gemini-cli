@@ -3,3 +3,14 @@
 [09/04/2025 14:16:11,82] Iniciando script de cierre. 
 --------------------------------------------------- 
 [09/04/2025 14:16:11,82] Ejecutando 'git add .'... 
+[09/04/2025 14:16:11,90] Revisando si hay cambios para commitear... 
+[09/04/2025 14:16:11,95] Cambios detectados. Ejecutando 'git commit'... 
+[master 8c32b60] Sync automatico al cierre de sesion
+[09/04/2025 14:16:11,95] ERROR: 'git commit' fallo. Revisa el log para mas detalles. 
+[09/04/2025 14:16:11,99] Script de cierre finalizado. 
+--------------------------------------------------- 
+ 
+--------------------------------------------------- 
+[09/04/2025 15:06:01,69] Iniciando script de cierre. 
+--------------------------------------------------- 
+[09/04/2025 15:06:01,69] Ejecutando 'git add .'... 
