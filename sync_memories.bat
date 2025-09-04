@@ -1,5 +1,9 @@
 @echo off
+<<<<<<< HEAD
     2     set REPO_PATH="D:\GEMINI-CLI\GeminiMemoriesRepo"
+=======
+    2     set REPO_PATH="F:\GEMINI-CLI\GeminiMemoriesRepo"
+>>>>>>> 149ae330ed50c408f26e4bc627b58c90ba3bab88
     3     set MEMORY_FILE="memories.md"
     4
     5     echo Navegando a %REPO_PATH%...
