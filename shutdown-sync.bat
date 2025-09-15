@@ -1,46 +1,28 @@
 @echo off
-setlocal
+echo Sincronizando el espacio de trabajo con GitHub...
+cd /d F:\GEMINI-CLI
 
-:: Define el archivo de log
-set LOGFILE=%~dp0shutdown-sync.log
+REM Añade todos los cambios al staging area
+git add .
 
-:: Inicia el registro
-echo. >> %LOGFILE%
-echo --------------------------------------------------- >> %LOGFILE%
-echo [%date% %time%] Iniciando script de cierre. >> %LOGFILE%
-echo --------------------------------------------------- >> %LOGFILE%
+REM Revisa si hay cambios para commitear
+git diff-index --quiet HEAD --
 
-:: Cambia al directorio del script
-cd /d "%~dp0" >> %LOGFILE% 2>&1
-
-echo [%date% %time%] Ejecutando 'git add .'... >> %LOGFILE%
-git add . >> %LOGFILE% 2>&1
-
-echo [%date% %time%] Revisando si hay cambios para commitear... >> %LOGFILE%
-:: Revisa si hay cambios pendientes
-git diff-index --quiet HEAD
-
-:: Si errorlevel es 0, no hay cambios. Si es 1, hay cambios.
-if %errorlevel% equ 0 (
-    echo [%date% %time%] No hay cambios para sincronizar. >> %LOGFILE%
-) else (
-    echo [%date% %time%] Cambios detectados. Ejecutando 'git commit'... >> %LOGFILE%
-    git commit -m "Sync automatico al cierre de sesion" >> %LOGFILE% 2>&1
+REM Si git diff-index encuentra cambios, su ERRORLEVEL es 1.
+if %errorlevel% neq 0 (
+    echo Cambios detectados. Creando commit...
+    git commit -m "Sync automatico: %date% %time%"
     
-    if %errorlevel% neq 0 (
-        echo [%date% %time%] ERROR: 'git commit' fallo. Revisa el log para mas detalles. >> %LOGFILE%
+    REM Verifica si el commit fue exitoso antes de hacer push
+    if %errorlevel% equ 0 (
+        echo Empujando cambios a origin main...
+        git push origin main
     ) else (
-        echo [%date% %time%] Commit exitoso. Ejecutando 'git push'... >> %LOGFILE%
-        git push >> %LOGFILE% 2>&1
-        if %errorlevel% neq 0 (
-            echo [%date% %time%] ERROR: 'git push' fallo. Revisa el log para mas detalles. >> %LOGFILE%
-        ) else (
-            echo [%date% %time%] Sincronizacion de cierre completada. >> %LOGFILE%
-        )
+        echo ERROR: El commit falló. No se hará push.
     )
+) else (
+    echo No hay cambios para commitear.
 )
 
-echo [%date% %time%] Script de cierre finalizado. >> %LOGFILE%
-echo --------------------------------------------------- >> %LOGFILE%
-
-endlocal
+echo.
+echo Sincronización completada.
