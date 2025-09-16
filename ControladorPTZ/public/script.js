@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playSequenceBtn = document.getElementById('play-sequence-btn');
     const clearPositionsBtn = document.getElementById('clear-positions-btn');
     const pauseTimeInput = document.getElementById('pause-time');
+    const panDurationInput = document.getElementById('pan-duration'); // Nuevo
     const positionList = document.getElementById('sequence-list');
 
     // Controles de Gestión de Secuencias
@@ -252,11 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
         playSequenceBtn.textContent = 'Detener';
         setControlsState(true);
 
-        
+        const durationInMs = parseFloat(panDurationInput.value) * 1000;
         let tempHomeSnapshot = null;
         let currentPosition = null; // La posición actual de la cámara en el bucle
-
-        const PLAY_DURATION_MS = 112000; // Duración del paneo en milisegundos
 
         try {
             
@@ -279,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     highlightPosition(i); // Highlight current position
                     await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}`);
-                    await new Promise(r => setTimeout(r, PLAY_DURATION_MS + 500));
+                    await new Promise(r => setTimeout(r, durationInMs + 500));
                     currentPosition = nextPosition;
                 }
 
@@ -287,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (positions.length > 1) {
                     await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${positions[0].key}`);
-                    await new Promise(r => setTimeout(r, PLAY_DURATION_MS + 500));
+                    await new Promise(r => setTimeout(r, durationInMs + 500));
                     currentPosition = positions[0];
                 }
             }
