@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPositionBtn = document.getElementById('add-position-btn');
     const playSequenceBtn = document.getElementById('play-sequence-btn');
     const clearPositionsBtn = document.getElementById('clear-positions-btn');
-    const panDurationInput = document.getElementById('pan-duration');
+    const pauseTimeInput = document.getElementById('pause-time');
     const positionList = document.getElementById('sequence-list');
 
     // Controles de Gestión de Secuencias
@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         positionList.innerHTML = '';
         positions.forEach((pos, index) => {
             const li = document.createElement('li');
-            li.textContent = `Posición ${index + 1}`;
+            li.dataset.index = index; // Add data-index attribute
+            li.textContent = `Posición ${index + 1} (Pausa: ${(pos.pauseTime || 0) / 1000}s)`; // Include pause time
             positionList.appendChild(li);
         });
     };
@@ -35,13 +36,33 @@ document.addEventListener('DOMContentLoaded', () => {
         addPositionBtn.disabled = disabled;
         clearPositionsBtn.disabled = disabled;
         ptzButtons.forEach(b => b.disabled = disabled);
-        panDurationInput.disabled = disabled;
         // También deshabilitamos los controles de guardado/carga
         saveSequenceBtn.disabled = disabled;
         loadSequenceBtn.disabled = disabled;
         deleteSequenceBtn.disabled = disabled;
         sequenceNameInput.disabled = disabled;
         sequenceSelect.disabled = disabled;
+    };
+
+    let highlightedIndex = -1; // Variable para mantener el índice resaltado
+
+    const highlightPosition = (index) => {
+        // Eliminar resaltado anterior
+        if (highlightedIndex !== -1) {
+            const prevLi = positionList.querySelector(`li[data-index="${highlightedIndex}"]`);
+            if (prevLi) {
+                prevLi.classList.remove('highlight');
+            }
+        }
+
+        // Añadir resaltado nuevo
+        if (index !== -1) {
+            const newLi = positionList.querySelector(`li[data-index="${index}"]`);
+            if (newLi) {
+                newLi.classList.add('highlight');
+            }
+        }
+        highlightedIndex = index;
     };
 
     // --- Lógica de Comandos PTZ (Movimiento Manual) ---
@@ -181,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addPositionBtn.textContent = 'Marcando...';
         try {
             const newPosition = await createSnapshot();
+            newPosition.pauseTime = parseFloat(pauseTimeInput.value) * 1000; // Convert to milliseconds
             positions.push(newPosition);
             updatePositionListView();
         } catch (error) {
@@ -218,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isPlaying = false;
             playSequenceBtn.textContent = 'Deteniendo...';
             playSequenceBtn.disabled = true;
+            await sendPtzCommand('stop'); // Detener el movimiento de la cámara
             return;
         }
 
@@ -229,11 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
         playSequenceBtn.textContent = 'Detener';
         setControlsState(true);
 
-        const durationInMs = parseFloat(panDurationInput.value) * 1000;
+        
         let tempHomeSnapshot = null;
         let currentPosition = null; // La posición actual de la cámara en el bucle
 
+        const PLAY_DURATION_MS = 112000; // Duración del paneo en milisegundos
+
         try {
+            
+
             // 1. Ir a Home y crear snapshot temporal de Home
             await sendPtzCommand('home');
             await new Promise(r => setTimeout(r, 1000)); // Esperar que la cámara llegue a Home
@@ -243,23 +270,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // Bucle de reproducción infinito
             while (isPlaying) {
                 for (let i = 0; i < positions.length; i++) {
-                    if (!isPlaying) break; 
+                    if (!isPlaying) break;
                     const nextPosition = positions[i];
 
                     if (currentPosition.key === nextPosition.key) {
                         continue;
                     }
 
-                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}&duration=${durationInMs}`);
-                    await new Promise(r => setTimeout(r, durationInMs + 500)); 
-                    currentPosition = nextPosition; 
+                    highlightPosition(i); // Highlight current position
+                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}`);
+                    await new Promise(r => setTimeout(r, PLAY_DURATION_MS + 500));
+                    currentPosition = nextPosition;
                 }
 
                 if (!isPlaying) break;
 
                 if (positions.length > 1) {
-                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${positions[0].key}&duration=${durationInMs}`);
-                    await new Promise(r => setTimeout(r, durationInMs + 500));
+                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${positions[0].key}`);
+                    await new Promise(r => setTimeout(r, PLAY_DURATION_MS + 500));
                     currentPosition = positions[0];
                 }
             }
@@ -279,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playSequenceBtn.textContent = 'Reproducir';
             playSequenceBtn.disabled = false;
             setControlsState(false);
+            highlightPosition(-1); // Remove all highlights
         }
     });
 

@@ -14,9 +14,6 @@ const SEQUENCES_DIR = path.join(__dirname, 'sequences');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// --- Almacenamiento de Secuencia Activa ---
-let activeSequence = [];
-
 // --- Inicialización ---
 // Nos aseguramos de que el directorio de secuencias exista
 const init = async () => {
@@ -43,7 +40,7 @@ const PTZ_COMMANDS = {
 };
 
 // --- Función Auxiliar para vMix ---
-const sendVmixCommand = async (functionName, inputKey = null) => {
+const sendVmixCommand = async (functionName, inputKey = null, value = null) => {
     if (!functionName) {
         console.error('Intento de enviar un comando a vMix sin functionName.');
         return;
@@ -51,7 +48,10 @@ const sendVmixCommand = async (functionName, inputKey = null) => {
     try {
         // Si no se provee una key, se usa el Input 1 por defecto (cámara principal)
         const input = inputKey || '1';
-        const url = `${VMIX_API_URL}?Function=${functionName}&Input=${input}`;
+        let url = `${VMIX_API_URL}?Function=${functionName}&Input=${input}`;
+        if (value !== null) {
+            url += `&Value=${value}`;
+        }
         console.log(`Enviando comando a vMix: ${url}`);
         await axios.get(url);
     } catch (error) {
@@ -83,9 +83,9 @@ app.get('/api/sequences/:name', async (req, res) => {
 
     try {
         const data = await fs.readFile(filePath, 'utf8');
-        activeSequence = JSON.parse(data);
-        console.log(`Secuencia '${name}' cargada y establecida como activa.`);
-        res.status(200).json(activeSequence);
+        const sequence = JSON.parse(data);
+        console.log(`Secuencia '${name}' cargada.`);
+        res.status(200).json(sequence);
     } catch (error) {
         console.error(`Error al cargar la secuencia '${name}':`, error);
         res.status(404).send({ message: `No se encontró la secuencia '${name}'.` });
@@ -134,32 +134,6 @@ app.delete('/api/sequences/:name', async (req, res) => {
     }
 });
 
-
-// --- Endpoints para CONTROL PTZ y GRABACIÓN en memoria ---
-
-app.post('/api/sequence/start', async (req, res) => {
-    console.log('Inicio de grabación solicitado. Moviendo a Home...');
-    await sendVmixCommand(PTZ_COMMANDS['home']);
-    activeSequence = []; // Limpia la secuencia activa en memoria
-    console.log('Secuencia activa reiniciada, listo para grabar.');
-    res.status(200).send({ message: 'Cámara en Home. Grabación iniciada.' });
-});
-
-app.post('/api/sequence/record', (req, res) => {
-    const { command, time } = req.body;
-    if (command && typeof time === 'number') {
-        activeSequence.push({ command, time });
-        // No logueamos cada comando para no saturar la consola
-        res.status(200).send({ message: 'Comando grabado.' });
-    } else {
-        res.status(400).send({ message: 'Datos de comando inválidos.' });
-    }
-});
-
-// Devuelve la secuencia activa en memoria
-app.get('/api/sequence', (req, res) => {
-    res.status(200).json(activeSequence);
-});
 
 // Endpoint de la API para control PTZ
 app.post('/api/ptz', async (req, res) => {

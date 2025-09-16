@@ -149,6 +149,12 @@ h1 {
 
 /* --- Nuevos Estilos para Gestión de Secuencias --- */
 
+.highlight {
+    background-color: yellow;
+    color: black; /* Ensure text is visible on yellow background */
+    font-weight: bold;
+}
+
 .sequence-row {
     display: flex;
     gap: 10px;
