@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadSequenceBtn = document.getElementById('load-sequence-btn');
     const deleteSequenceBtn = document.getElementById('delete-sequence-btn');
     const activeSequenceName = document.getElementById('active-sequence-name');
+    const randomOrderCheckbox = document.getElementById('random-order-checkbox');
 
     // --- Variables de Estado ---
     let positions = []; // Almacenará la info de los inputs virtuales: { key, title, number }
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteSequenceBtn.disabled = disabled;
         sequenceNameInput.disabled = disabled;
         sequenceSelect.disabled = disabled;
+        randomOrderCheckbox.disabled = disabled;
     };
 
     let highlightedIndex = -1; // Variable para mantener el índice resaltado
@@ -253,41 +255,108 @@ document.addEventListener('DOMContentLoaded', () => {
         playSequenceBtn.textContent = 'Detener';
         setControlsState(true);
 
-        const durationInMs = parseFloat(panDurationInput.value) * 1000;
-        let tempHomeSnapshot = null;
         let currentPosition = null; // La posición actual de la cámara en el bucle
 
         try {
-            
+            // 1. Ir a la Posición 1 para empezar
+            const startPosition = positions[0];
+            const initialDurationInMs = parseFloat(panDurationInput.value) * 1000;
+            const initialPauseInMs = parseFloat(pauseTimeInput.value) * 1000;
 
-            // 1. Ir a Home y crear snapshot temporal de Home
-            await sendPtzCommand('home');
-            await new Promise(r => setTimeout(r, 1000)); // Esperar que la cámara llegue a Home
-            tempHomeSnapshot = await createSnapshot();
-            currentPosition = tempHomeSnapshot; // Empezamos desde Home
+            highlightPosition(0);
+            await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${startPosition.key}`);
+            await new Promise(r => setTimeout(r, initialDurationInMs + 500)); // Esperar que termine el paneo
+            currentPosition = startPosition;
+
+            // Aplicar la pausa inicial después de llegar a la primera posición
+            if (isPlaying) {
+                await new Promise(r => setTimeout(r, initialPauseInMs));
+            }
 
             // Bucle de reproducción infinito
             while (isPlaying) {
-                for (let i = 0; i < positions.length; i++) {
-                    if (!isPlaying) break;
-                    const nextPosition = positions[i];
+                // Leer la duración y la pausa en cada ciclo por si cambian
+                const durationInMs = parseFloat(panDurationInput.value) * 1000;
+                const pauseInMs = parseFloat(pauseTimeInput.value) * 1000;
+                const isRandom = randomOrderCheckbox.checked;
 
-                    if (currentPosition.key === nextPosition.key) {
-                        continue;
+                if (isRandom) {
+                    if (positions.length < 2) {
+                        alert("El modo aleatorio requiere al menos 2 posiciones.");
+                        isPlaying = false;
+                        break;
                     }
 
-                    highlightPosition(i); // Highlight current position
-                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}`);
-                    await new Promise(r => setTimeout(r, durationInMs + 500));
-                    currentPosition = nextPosition;
-                }
+                    // Crear una copia barajada de las posiciones
+                    const shuffledPositions = [...positions];
+                    for (let i = shuffledPositions.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledPositions[i], shuffledPositions[j]] = [shuffledPositions[j], shuffledPositions[i]];
+                    }
 
-                if (!isPlaying) break;
+                    // Asegurarse de que el nuevo ciclo no comience con la misma posición donde terminó el anterior
+                    if (shuffledPositions[0].key === currentPosition.key) {
+                        // Mover el primer elemento al final para evitar una repetición inmediata
+                        shuffledPositions.push(shuffledPositions.shift());
+                    }
 
-                if (positions.length > 1) {
-                    await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${positions[0].key}`);
-                    await new Promise(r => setTimeout(r, durationInMs + 500));
-                    currentPosition = positions[0];
+                    // Iterar a través de la secuencia barajada
+                    for (const nextPosition of shuffledPositions) {
+                        if (!isPlaying) break;
+
+                        // Encontrar el índice original para poder resaltarlo en la lista
+                        const originalIndex = positions.findIndex(p => p.key === nextPosition.key);
+                        highlightPosition(originalIndex);
+
+                        await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}`);
+                        await new Promise(r => setTimeout(r, durationInMs + 500));
+                        currentPosition = nextPosition;
+
+                        if (isPlaying) {
+                            await new Promise(r => setTimeout(r, pauseInMs));
+                        }
+                    }
+
+                    if (isPlaying) {
+                        console.log('Ciclo de movimientos aleatorio completado.');
+                    }
+
+                } else { // Modo Secuencial
+                    // Empezamos desde la segunda posición porque ya estamos en la primera
+                    for (let i = 1; i < positions.length; i++) {
+                        if (!isPlaying) break;
+                        const nextPosition = positions[i];
+
+                        // No debería ser necesario, pero por si acaso
+                        if (currentPosition.key === nextPosition.key) {
+                            continue;
+                        }
+
+                        highlightPosition(i);
+                        await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPosition.key}`);
+                        await new Promise(r => setTimeout(r, durationInMs + 500));
+                        currentPosition = nextPosition;
+
+                        if (isPlaying) {
+                            await new Promise(r => setTimeout(r, pauseInMs));
+                        }
+                    }
+
+                    if (!isPlaying) break;
+
+                    // Al final del ciclo secuencial, volver a la posición 1
+                    if (positions.length > 1) {
+                        highlightPosition(0);
+                        await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${positions[0].key}`);
+                        await new Promise(r => setTimeout(r, durationInMs + 500));
+                        currentPosition = positions[0];
+
+                        if (isPlaying) {
+                            await new Promise(r => setTimeout(r, pauseInMs));
+                        }
+                    }
+                    
+                    console.log('Ciclo de movimientos secuencial completado.');
                 }
             }
 
@@ -295,18 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error en la reproducción:', error);
             alert('Ocurrió un error durante la reproducción. Revisa la consola del servidor.');
         } finally {
-            if (tempHomeSnapshot) {
-                await fetch('/api/ptz/remove-inputs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ keys: [tempHomeSnapshot.key] })
-                });
-            }
+            // Ya no hay snapshot temporal que limpiar
             isPlaying = false;
             playSequenceBtn.textContent = 'Reproducir';
             playSequenceBtn.disabled = false;
             setControlsState(false);
-            highlightPosition(-1); // Remove all highlights
+            highlightPosition(-1); // Limpiar resaltado
         }
     });
 
