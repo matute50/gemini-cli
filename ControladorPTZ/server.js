@@ -7,7 +7,7 @@ const { parseString } = require('xml2js');
 const app = express();
 const PORT = 3000;
 
-const VMIX_API_URL = 'http://127.0.0.1:8088/api';
+const VMIX_API_URL = 'http://192.168.10.197:8088/api';
 const SEQUENCES_DIR = path.join(__dirname, 'sequences');
 
 // --- Middleware ---
@@ -111,6 +111,26 @@ app.post('/api/sequences/:name', async (req, res) => {
     } catch (error) {
         console.error(`Error al guardar la secuencia '${name}':`, error);
         res.status(500).send({ message: 'Error al guardar el archivo de secuencia.' });
+    }
+});
+
+// BORRAR una secuencia por nombre
+app.delete('/api/sequences/:name', async (req, res) => {
+    const { name } = req.params;
+    const fileName = name.replace(/[^a-z0-9_-]/gi, '_') + '.json';
+    const filePath = path.join(SEQUENCES_DIR, fileName);
+
+    try {
+        await fs.unlink(filePath);
+        console.log(`Secuencia '${name}' eliminada.`);
+        res.status(200).send({ message: `Secuencia '${name}' eliminada.` });
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.error(`Intento de borrar secuencia no existente: '${name}'`);
+            return res.status(404).send({ message: `No se encontró la secuencia '${name}'.` });
+        }
+        console.error(`Error al eliminar la secuencia '${name}':`, error);
+        res.status(500).send({ message: 'Error al eliminar el archivo de secuencia.' });
     }
 });
 
