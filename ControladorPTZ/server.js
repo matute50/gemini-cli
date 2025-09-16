@@ -50,6 +50,8 @@ const sendVmixCommand = async (functionName, inputKey, value = null) => {
 // --- Funciones Auxiliares para Secuencias ---
 const sanitize = (name) => name.replace(/[^a-z0-9_-]/gi, '_');
 
+module.exports = { sanitize };
+
 const getCameraSequencePath = (inputId, sequenceName = '') => {
     const sanitizedInput = sanitize(inputId);
     const sanitizedSequenceName = sequenceName ? sanitize(sequenceName) + '.json' : '';
@@ -238,6 +240,8 @@ app.get('/api/ptz/function', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+}
