@@ -264,6 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const newPosition = await createSnapshot();
             state.cameras[state.activeCameraId].positions.push(newPosition);
             updatePositionListView();
+            // Forzar la actualización del estado de los controles para habilitar el botón de play
+            setControlsState(state.cameras[state.activeCameraId].isPlaying, state.activeCameraId);
         } catch (error) {
             console.error('Error al marcar la posición:', error);
             alert('No se pudo marcar la posición.');
