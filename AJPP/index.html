@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJPP Damas</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="splash-screen">
+        <img src="https://via.placeholder.com/150x150?text=AJPP+Logo" alt="AJPP Logo" class="splash-logo">
+    </div>
+
+    <div id="app-container" class="hidden">
+        <header>
+            <button id="menu-toggle" class="icon-button"><i class="fas fa-bars"></i></button>
+            <img src="https://via.placeholder.com/50x50?text=AJPP" alt="AJPP Logo" class="header-logo">
+            <h1>AJPP Damas</h1>
+        </header>
+
+        <nav id="side-menu">
+            <ul>
+                <li><a href="#" data-section="que-es-ajpp">¿Qué es la AJPP?</a></li>
+                <li><a href="#" data-section="estadisticas">Estadísticas</a></li>
+                <li><a href="#" data-section="reglamentos">Reglamentos</a></li>
+                <li><a href="#" data-section="archivo-ajpp">Archivo AJPP</a></li>
+                <li><a href="#" data-section="amamos-el-padel">Amamos el Pádel</a></li>
+                <li><a href="#" data-section="contactos">Contactos</a></li>
+            </ul>
+        </nav>
+
+        <main id="main-content">
+            <section id="home" class="active-section">
+                <h2>Inicio</h2>
+                <div id="next-tournament-container">
+                    <!-- Próximo Torneo se cargará aquí dinámicamente -->
+                </div>
+                <div id="top-5-ranking-container">
+                    <!-- Top 5 Ranking se cargará aquí dinámicamente -->
+                </div>
+                <div id="recent-news-container">
+                    <!-- Noticias Recientes se cargarán aquí dinámicamente -->
+                </div>
+                <div id="live-access-banner-container">
+                    <!-- Acceso a "AJPP en Vivo" se cargará aquí dinámicamente -->
+                </div>
+            </section>
+
+            <section id="jugadoras" class="hidden-section">
+                <h2>Jugadoras</h2>
+                <input type="text" id="player-search" placeholder="Buscar jugadora...">
+                <div id="player-list-container" class="player-list">
+                    <!-- Jugadoras se cargarán aquí dinámicamente -->
+                </div>
+            </section>
+
+            <section id="player-profile-detail" class="hidden-section">
+                <button class="back-button" data-target-section="jugadoras"><i class="fas fa-arrow-left"></i> Volver</button>
+                <div id="player-profile-content">
+                    <!-- Contenido del perfil de la jugadora se cargará aquí dinámicamente -->
+                </div>
+            </section>
+
+            <section id="calendario" class="hidden-section">
+                <h2>Calendario</h2>
+                <div id="tournament-list-container" class="tournament-list">
+                    <!-- Torneos se cargarán aquí dinámicamente -->
+                </div>
+            </section>
+
+            <section id="tournament-detail" class="hidden-section">
+                <button class="back-button" data-target-section="calendario"><i class="fas fa-arrow-left"></i> Volver</button>
+                <div id="tournament-detail-content">
+                    <!-- Contenido del detalle del torneo se cargará aquí dinámicamente -->
+                </div>
+            </section>
+
+            <section id="rankings" class="hidden-section">
+                <h2>Rankings</h2>
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="individual-ranking">Individual</button>
+                    <button class="tab-button" data-tab="parejas-ranking">Parejas</button>
+                </div>
+                <div id="individual-ranking" class="tab-content active">
+                    <h3>Ranking Individual</h3>
+                    <input type="text" id="individual-search" placeholder="Buscar jugadora...">
+                    <div id="individual-ranking-list">
+                        <!-- Ranking individual se cargará aquí dinámicamente -->
+                    </div>
+                    <a href="https://via.placeholder.com/pdf" target="_blank" class="download-link">Descargar Ranking Oficial PDF</a>
+                </div>
+                <div id="parejas-ranking" class="tab-content hidden">
+                    <h3>Ranking Parejas</h3>
+                    <div id="parejas-ranking-list">
+                        <!-- Ranking de parejas se cargará aquí dinámicamente -->
+                    </div>
+                    <a href="https://via.placeholder.com/pdf" target="_blank" class="download-link">Descargar Ranking Oficial PDF</a>
+                </div>
+            </section>
+
+            <section id="en-vivo" class="hidden-section">
+                <h2>AJPP en Vivo</h2>
+                <div id="live-matches-container">
+                    <!-- Partidos en vivo se cargarán aquí dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Secciones del menú lateral -->
+            <section id="que-es-ajpp" class="hidden-section">
+                <h2>¿Qué es la AJPP?</h2>
+                <h3>Misión y Fundamentos</h3>
+                <p>La Asociación de Jugadores Profesionales de Pádel (AJPP) es una entidad dedicada a la defensa y representación de los intereses comunes de las jugadoras. Sus pilares fundamentales son la profesionalización de la jugadora, el crecimiento de la competitividad en el circuito y la mejora continua en la organización de los torneos.</p>
+                <h3>Historia</h3>
+                <p>La idea de formar una asociación surgió entre los propios jugadores de pádel en el año 2000, buscando una voz unificada para sus intereses. Fue reconocida legalmente en el año 2001, sentando las bases para el desarrollo del pádel profesional femenino en Argentina.</p>
+                <h3>Acuerdo con APA</h3>
+                <p>La AJPP mantiene un convenio estratégico con la Asociación Pádel Argentino (APA). Gracias a este acuerdo, la APA se encarga de la gestión del ranking nacional de la AJPP y de la organización de torneos oficiales, lo que contribuye significativamente a fortalecer y expandir el deporte en todo el país.</p>
+            </section>
+
+            <section id="estadisticas" class="hidden-section">
+                <h2>Estadísticas</h2>
+                <p>Explora las métricas clave del circuito AJPP Damas.</p>
+
+                <h3>Estadísticas de Jugadoras</h3>
+                <p>Aquí encontrarás comparativas de rendimiento de las jugadoras, incluyendo:</p>
+                <ul>
+                    <li>Porcentaje de victorias</li>
+                    <li>Efectividad en puntos de quiebre</li>
+                    <li>Promedio de aces por partido</li>
+                    <li>Errores no forzados</li>
+                </ul>
+                <div class="chart-placeholder" style="height: 200px; background-color: #e9ecef; display: flex; justify-content: center; align-items: center; margin-top: 15px; border-radius: 5px;">Gráfico de Rendimiento de Jugadoras (Placeholder)</div>
+
+                <h3>Estadísticas de Torneos</h3>
+                <p>Análisis de los torneos del circuito:</p>
+                <ul>
+                    <li>Datos de participación</li>
+                    <li>Duración promedio de partidos</li>
+                    <li>Número de sets jugados por torneo</li>
+                    <li>Distribución de puntos</li>
+                </ul>
+                <div class="chart-placeholder" style="height: 200px; background-color: #e9ecef; display: flex; justify-content: center; align-items: center; margin-top: 15px; border-radius: 5px;">Gráfico de Datos de Torneos (Placeholder)</div>
+
+                <h3>Datos Fisiológicos en el Pádel Femenino</h3>
+                <p>Comprende las demandas físicas del pádel:</p>
+                <ul>
+                    <li>La frecuencia cardíaca media en partidos femeninos amateur es de <strong>150 ± 8.6 ppm</strong>.</li>
+                    <li>Las jugadoras pasan la mayor parte del tiempo (entre el 80-90%) de su frecuencia cardíaca máxima teórica.</li>
+                    <li>Estos datos resaltan la alta intensidad y el esfuerzo cardiovascular requerido en cada encuentro.</li>
+                </ul>
+            </section>
+
+            <section id="reglamentos" class="hidden-section">
+                <h2>Reglamentos</h2>
+                <p>Contenido de la sección de Reglamentos.</p>
+                <div class="collapsible-section">
+                    <h3>Reglamento de Juego FIP/FEP</h3>
+                    <p>Reglas clave como puntuación ("Punto de Oro"), saque, tiempos de descanso, y dimensiones de la pista.</p>
+                </div>
+                <div class="collapsible-section">
+                    <h3>Reglamento Deportivo Amateur APA</h3>
+                    <p>Se aplica de forma subsidiaria.</p>
+                </div>
+                <div class="collapsible-section">
+                    <h3>Código de Conducta</h3>
+                    <p>Normas de disciplina en la pista.</p>
+                </div>
+            </section>
+
+            <section id="archivo-ajpp" class="hidden-section">
+                <h2>Archivo AJPP</h2>
+                <p>Contenido de la sección de Archivo AJPP.</p>
+                <div class="filters">
+                    <select><option>Año</option></select>
+                    <select><option>Torneo</option></select>
+                </div>
+                <h3>Resultados Históricos</h3>
+                <p>Campeonas y finalistas de torneos pasados.</p>
+                <h3>Rankings Finales</h3>
+                <p>Rankings de temporadas anteriores.</p>
+                <h3>Galería</h3>
+                <p>Fotos y videos de momentos destacados.</p>
+            </section>
+
+            <section id="amamos-el-padel" class="hidden-section">
+                <h2>Amamos el Pádel</h2>
+                <p>Contenido de la sección "Amamos el Pádel".</p>
+                <div class="social-feed">
+                    <div class="post-input">
+                        <textarea placeholder="Comparte tu pasión por el pádel..."></textarea>
+                        <button>Publicar</button>
+                    </div>
+                    <div class="post-card">
+                        <p>Usuario X: ¡Gran partido hoy!</p>
+                        <img src="https://via.placeholder.com/200x150?text=Foto+Padel" alt="Padel Photo">
+                        <div class="post-actions">
+                            <span>Me gusta</span>
+                            <span>Comentar</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contactos" class="hidden-section">
+                <h2>Contactos</h2>
+                <p>Contenido de la sección de Contactos.</p>
+                <p>Email Contacto: padelajppdamas@gmail.com</p>
+                <p>Email Comunicación: redes.ajppdamas@gmail.com</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+                <form class="contact-form">
+                    <input type="text" placeholder="Tu Nombre">
+                    <input type="email" placeholder="Tu Email">
+                    <textarea placeholder="Tu Mensaje"></textarea>
+                    <button type="submit">Enviar</button>
+                </form>
+            </section>
+
+        </main>
+
+        <nav id="bottom-nav">
+            <a href="#" class="nav-item active" data-section="home">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="#" class="nav-item" data-section="jugadoras">
+                <i class="fas fa-users"></i>
+                <span>Jugadoras</span>
+            </a>
+            <a href="#" class="nav-item" data-section="calendario">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendario</span>
+            </a>
+            <a href="#" class="nav-item" data-section="rankings">
+                <i class="fas fa-trophy"></i>
+                <span>Rankings</span>
+            </a>
+            <a href="#" class="nav-item" data-section="en-vivo">
+                <i class="fas fa-video"></i>
+                <span>En Vivo</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
