@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert('No se puede seleccionar una cámara que está offline.');
         }
         if (state.cameras[state.activeCameraId].isPlaying) {
-            return alert('No se puede cambiar de cámara mientras la cámara actual está reproduciendo una secuencia.');
+            // return alert('No se puede cambiar de cámara mientras la cámara actual está reproduciendo una secuencia.');
         }
         state.activeCameraId = cameraNumber;
         tabButtons.forEach(btn => {
@@ -208,30 +208,23 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUIForActiveCamera();
     };
 
-    const setControlsState = (disabled, camId = state.activeCameraId) => {
-        if (camId === 'all') {
-            // Disable/enable all controls if all cameras are offline
-            ptzButtons.forEach(b => { b.disabled = disabled; });
-            [addPositionBtn, clearPositionsBtn, saveSequenceBtn, loadSequenceBtn, deleteSequenceBtn, sequenceNameInput, sequenceSelect, randomOrderCheckbox, pauseTimeInput, panDurationInput].forEach(el => el.disabled = disabled);
-            playSequenceBtn.disabled = disabled;
-            playSequenceBtn.textContent = disabled ? 'Reproducir' : 'Reproducir'; // Reset text
-            return;
-        }
+    const setControlsState = (disabled, camId) => {
+        // If camId is not provided, it defaults to the active one, which is what we want.
+        const targetCamId = camId || state.activeCameraId;
+        state.cameras[targetCamId].isPlaying = disabled;
 
-        state.cameras[camId].isPlaying = disabled;
-        
-        // Only update play button for the active camera
-        if (camId === state.activeCameraId) {
-            playSequenceBtn.textContent = disabled ? 'Detener' : 'Reproducir';
-            playSequenceBtn.disabled = disabled;
-        }
+        // Always update the play button for the active camera based on its own state
+        const activeCamIsPlaying = state.cameras[state.activeCameraId].isPlaying;
+        playSequenceBtn.textContent = activeCamIsPlaying ? 'Detener' : 'Reproducir';
+        playSequenceBtn.disabled = state.cameras[state.activeCameraId].positions.length < 1 && !activeCamIsPlaying;
 
-        // Disable/enable PTZ buttons and sequence controls for the specific camera
-        const isActiveTab = (camId === state.activeCameraId);
-        const isOffline = (state.cameras[camId].status === 'offline');
 
-        ptzButtons.forEach(b => { b.disabled = disabled || !isActiveTab || isOffline; });
-        [addPositionBtn, clearPositionsBtn, saveSequenceBtn, loadSequenceBtn, deleteSequenceBtn, sequenceNameInput, sequenceSelect, randomOrderCheckbox, pauseTimeInput, panDurationInput].forEach(el => el.disabled = disabled || !isActiveTab || isOffline);
+        // Disable/enable PTZ buttons and sequence controls for the active camera
+        const isOffline = (state.cameras[state.activeCameraId].status === 'offline');
+        const controlsShouldBeDisabled = activeCamIsPlaying || isOffline;
+
+        ptzButtons.forEach(b => { b.disabled = controlsShouldBeDisabled; });
+        [addPositionBtn, clearPositionsBtn, saveSequenceBtn, loadSequenceBtn, deleteSequenceBtn, sequenceNameInput, sequenceSelect, randomOrderCheckbox, pauseTimeInput, panDurationInput].forEach(el => el.disabled = controlsShouldBeDisabled);
     };
 
     // =================================================================================
@@ -363,88 +356,105 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function playSequenceHandler() {
         const activeCamData = state.cameras[state.activeCameraId];
+        const camId = state.activeCameraId;
 
+        // --- Lógica para DETENER la secuencia ---
         if (activeCamData.isPlaying) {
-            activeCamData.isPlaying = false; // Signal to stop the loop
-            playSequenceBtn.textContent = 'Deteniendo...';
-            playSequenceBtn.disabled = true;
-            await sendPtzCommand('stop');
+            activeCamData.isPlaying = false; // Envía la señal para que el bucle de reproducción se detenga
+            sendPtzCommand('stop'); // Envía el comando de parada a vMix sin esperar
+            setControlsState(false, camId); // Reactiva los controles inmediatamente
+            console.log(`Señal de detención enviada a la cámara ${camId}.`);
             return;
         }
-        
-        if (activeCamData.positions.length < 1) return alert('Necesitas al menos 1 posición.');
 
-        setControlsState(true, state.activeCameraId);
+        // --- Lógica para INICIAR la secuencia ---
+        if (activeCamData.positions.length < 1) {
+            return alert('Necesitas al menos 1 posición para iniciar una secuencia.');
+        }
 
-        let currentPosition = null;
+        setControlsState(true, camId); // Desactiva los controles para esta cámara
+        console.log(`Iniciando secuencia en la cámara ${camId}.`);
 
-        try {
-            const startPosition = activeCamData.positions[0];
-            const initialDurationInMs = parseFloat(panDurationInput.value) * 1000;
-            const initialPauseInMs = parseFloat(pauseTimeInput.value) * 1000;
+        // La ejecución de la secuencia se envuelve en una función auto-ejecutable
+        // para que el 'finally' se ejecute correctamente al terminar.
+        (async () => {
+            let currentPosition = null;
+            try {
+                // Mover a la primera posición antes de empezar el bucle principal
+                const startPosition = activeCamData.positions[0];
+                const initialDurationInMs = parseFloat(panDurationInput.value) * 1000;
+                const initialPauseInMs = parseFloat(pauseTimeInput.value) * 1000;
 
-            highlightPosition(0);
-            await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${startPosition.key}`);
-            await new Promise(r => setTimeout(r, initialDurationInMs + 500));
-            currentPosition = startPosition;
+                highlightPosition(0);
+                await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${startPosition.key}`);
+                await new Promise(r => setTimeout(r, initialDurationInMs + 500));
+                currentPosition = startPosition;
 
-            if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, initialPauseInMs));
+                // Pausa inicial después de llegar a la primera posición
+                if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, initialPauseInMs));
 
-            while (activeCamData.isPlaying) {
-                const durationInMs = parseFloat(panDurationInput.value) * 1000;
-                const pauseInMs = parseFloat(pauseTimeInput.value) * 1000;
-                const isRandom = randomOrderCheckbox.checked;
+                // Bucle principal de reproducción
+                while (activeCamData.isPlaying) {
+                    const durationInMs = parseFloat(panDurationInput.value) * 1000;
+                    const pauseInMs = parseFloat(pauseTimeInput.value) * 1000;
+                    const isRandom = randomOrderCheckbox.checked;
 
-                if (isRandom) {
-                    if (activeCamData.positions.length < 2) {
-                        alert("El modo aleatorio requiere al menos 2 posiciones.");
-                        break;
-                    }
-                    const shuffled = [...activeCamData.positions];
-                    for (let i = shuffled.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                    }
-                    if (shuffled[0].key === currentPosition.key) shuffled.push(shuffled.shift());
+                    if (isRandom) {
+                        // --- Lógica Aleatoria ---
+                        if (activeCamData.positions.length < 2) {
+                            alert("El modo aleatorio requiere al menos 2 posiciones.");
+                            break; // Salir del bucle while
+                        }
+                        // Crear una copia y barajarla
+                        let shuffled = [...activeCamData.positions];
+                        for (let i = shuffled.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                        }
+                        // Asegurarse de que el siguiente no sea el actual
+                        if (shuffled[0].key === currentPosition.key) {
+                            shuffled.push(shuffled.shift());
+                        }
 
-                    for (const nextPos of shuffled) {
-                        if (!activeCamData.isPlaying) break;
-                        const originalIndex = activeCamData.positions.findIndex(p => p.key === nextPos.key);
-                        highlightPosition(originalIndex);
+                        for (const nextPos of shuffled) {
+                            if (!activeCamData.isPlaying) break;
+                            const originalIndex = activeCamData.positions.findIndex(p => p.key === nextPos.key);
+                            highlightPosition(originalIndex);
+                            await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPos.key}`);
+                            await new Promise(r => setTimeout(r, durationInMs + 500));
+                            currentPosition = nextPos;
+                            if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, pauseInMs));
+                        }
+                        if (activeCamData.isPlaying) console.log('Ciclo aleatorio completado.');
+
+                    } else {
+                        // --- Lógica Secuencial ---
+                        let currentIndex = activeCamData.positions.findIndex(p => p.key === currentPosition.key);
+                        let nextIndex = (currentIndex + 1) % activeCamData.positions.length;
+                        
+                        const nextPos = activeCamData.positions[nextIndex];
+                        highlightPosition(nextIndex);
                         await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPos.key}`);
                         await new Promise(r => setTimeout(r, durationInMs + 500));
                         currentPosition = nextPos;
                         if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, pauseInMs));
+                        
+                        if (nextIndex === 0) console.log('Ciclo secuencial completado.');
                     }
-                    if (activeCamData.isPlaying) console.log('Ciclo aleatorio completado.');
-                } else {
-                    for (let i = 1; i < activeCamData.positions.length; i++) {
-                        if (!activeCamData.isPlaying) break;
-                        const nextPos = activeCamData.positions[i];
-                        highlightPosition(i);
-                        await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${nextPos.key}`);
-                        await new Promise(r => setTimeout(r, durationInMs + 500));
-                        currentPosition = nextPos;
-                        if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, pauseInMs));
-                    }
-                    if (!activeCamData.isPlaying) break;
-                    if (activeCamData.positions.length > 1) {
-                        highlightPosition(0);
-                        await fetch(`/api/ptz/function?name=PTZMoveToVirtualInputPosition&input=${activeCamData.positions[0].key}`);
-                        await new Promise(r => setTimeout(r, durationInMs + 500));
-                        currentPosition = activeCamData.positions[0];
-                        if (activeCamData.isPlaying) await new Promise(r => setTimeout(r, pauseInMs));
-                    }
-                    console.log('Ciclo secuencial completado.');
+                } // Fin del while
+            } catch (error) {
+                console.error('Error durante la reproducción de la secuencia:', error);
+                alert('Ocurrió un error durante la reproducción.');
+            } finally {
+                // Esta sección se ejecuta cuando el bucle 'while' termina (ya sea por stop o al finalizar)
+                console.log(`Secuencia detenida en la cámara ${camId}.`);
+                // Solo reactivar los controles si la cámara que terminó es la que está activa en la UI
+                if (state.activeCameraId === camId) {
+                    setControlsState(false, camId);
+                    highlightPosition(-1);
                 }
             }
-        } catch (error) {
-            console.error('Error en la reproducción:', error);
-            alert('Ocurrió un error durante la reproducción.');
-        } finally {
-            setControlsState(false, state.activeCameraId);
-            highlightPosition(-1);
-        }
+        })(); // Fin de la función auto-ejecutable
     }
 
     // =================================================================================
