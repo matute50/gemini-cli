@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJPP Damas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div id="splash-screen">
+        <img src="assets/logos/ajpp_logo_placeholder.png" alt="Logo AJPP">
+    </div>
+
+    <header id="main-header">
+        <button id="menu-btn" class="header-btn"><i class="fas fa-bars"></i></button>
+        <h1>Inicio</h1>
+        <button id="search-btn" class="header-btn"><i class="fas fa-search"></i></button>
+    </header>
+
+    <main id="app-content">
+        <!-- El contenido dinámico de las secciones se cargará aquí -->
+    </main>
+
+    <nav id="tab-bar">
+        <a href="#inicio" class="tab-item active" data-section="inicio">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+        <a href="#jugadoras" class="tab-item" data-section="jugadoras">
+            <i class="fas fa-users"></i>
+            <span>Jugadoras</span>
+        </a>
+        <a href="#calendario" class="tab-item" data-section="calendario">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Calendario</span>
+        </a>
+        <a href="#rankings" class="tab-item" data-section="rankings">
+            <i class="fas fa-trophy"></i>
+            <span>Rankings</span>
+        </a>
+        <a href="#en-vivo" class="tab-item" data-section="en-vivo">
+            <i class="fas fa-broadcast-tower"></i>
+            <span>En Vivo</span>
+        </a>
+    </nav>
+    
+    <div id="side-menu">
+        <!-- El menú lateral se generará aquí -->
+    </div>
+    <div id="overlay"></div>
+
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
