@@ -114,6 +114,12 @@ body {
     background-color: #f44336; /* Red */
 }
 
+    transition: background-color 0.2s ease;
+}
+
+    transition: background-color 0.2s ease;
+}
+
 #refresh-status-btn {
     padding: 8px 15px;
     background-color: #607d8b;

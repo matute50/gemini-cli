@@ -1,0 +1,22 @@
+[
+  {
+    "key": "aff12bee-da16-4f0b-988d-63feff69911e",
+    "title": "PTZ - SRT 192.168.10.189 10000",
+    "number": 23
+  },
+  {
+    "key": "593de363-2a80-4dbb-ab99-f9c835738811",
+    "title": "PTZ - SRT 192.168.10.189 10000",
+    "number": 24
+  },
+  {
+    "key": "ddb1209f-0c43-4c7d-8ba8-624bb41d7058",
+    "title": "PTZ - SRT 192.168.10.189 10000",
+    "number": 25
+  },
+  {
+    "key": "7710ba88-7d0a-491b-a18b-a6ec1603e360",
+    "title": "PTZ - SRT 192.168.10.189 10000",
+    "number": 26
+  }
+]
