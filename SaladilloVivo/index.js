@@ -1,5 +1,6 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const RSS = require('rss');
 
 const app = express();
@@ -34,43 +35,46 @@ app.get('/feed', async (req, res) => {
   console.log('Solicitud recibida en /feed. Iniciando scraping...');
 
   try {
-    // 1. INICIAR PUPPETEER Y NAVEGAR A LA PÁGINA
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(SITE_URL, { waitUntil: 'networkidle2' });
-    console.log('Página cargada en Puppeteer.');
+    // 1. OBTENER EL HTML DE LA PÁGINA
+    const response = await axios.get(SITE_URL);
+    const html = response.data;
 
-    // 2. EXTRAER LA INFORMACIÓN DE LAS NOTICIAS
-    // Se ejecuta este código dentro del navegador para acceder al DOM
-    const articles = await page.evaluate(() => {
-      // Selector de los contenedores de cada noticia.
-      // Este es el paso más frágil, depende de la estructura del HTML del sitio.
-      const articleElements = document.querySelectorAll('article.post');
-      
-      const articlesData = [];
-      articleElements.forEach(article => {
-        const titleElement = article.querySelector('h2.entry-title a');
-        const descriptionElement = article.querySelector('div.entry-summary');
+    // 2. PARSEAR EL HTML Y EXTRAER LA INFORMACIÓN
+    const $ = cheerio.load(html);
+    const articles = [];
 
-        if (titleElement && descriptionElement) {
-          articlesData.push({
-            title: titleElement.innerText,
-            url: titleElement.href,
-            description: descriptionElement.innerText.trim(),
-          });
-        }
-      });
-      return articlesData;
+    $('article.post').each((_idx, el) => {
+      const titleElement = $(el).find('h2.entry-title a');
+      const descriptionElement = $(el).find('div.entry-summary');
+
+      if (titleElement.length && descriptionElement.length) {
+      const title = titleElement.text();
+      const url = titleElement.attr('href');
+      const description = descriptionElement.text().trim();
+
+      // Defensive check: only add item if all core fields are present
+      if (title && url && description) {
+        articles.push({
+          title: title,
+          url: url,
+          description: description,
+        });
+      }
+      }
     });
     console.log(`Se encontraron ${articles.length} artículos.`);
 
     await browser.close();
 
     // 3. CREAR EL FEED RSS
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const publicUrl = `${protocol}://${host}/feed`;
+
     const feed = new RSS({
       title: 'Saladillo Vivo - Feed no oficial',
       description: 'Feed RSS generado automáticamente de las últimas noticias de saladillovivo.com.ar',
-      feed_url: `http://localhost:${PORT}/feed`,
+      feed_url: publicUrl,
       site_url: SITE_URL,
       language: 'es',
     });
@@ -93,7 +97,7 @@ app.get('/feed', async (req, res) => {
 
   } catch (error) {
     console.error('Error durante el scraping o la generación del feed:', error);
-    res.status(500).send('Error al generar el feed RSS. Revisa la consola del servidor.');
+    res.status(500).send(`Error details: ${error.message}`);
   }
 });
 
