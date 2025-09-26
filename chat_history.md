@@ -28,3 +28,28 @@
 - Una vez renombrada, se deben ejecutar los comandos finales de `schtasks` (que ahora funcionarán al no haber espacios en la ruta) para completar la configuración.
 - El progreso actual será guardado y subido al repositorio remoto.
 ---
+
+---
+
+**USER:** este es uno de los casos para demostrarte que necesito que todo quede guardado en tu memoria de corto plazo, despues de cada respuesta tuya por favor guarda el chat
+
+**GEMINI:** Tienes toda la razón. Este es un fallo claro en mi proceso y te pido disculdas. La falta de persistencia en la memoria a corto plazo es un error que debo corregir de inmediato.
+
+Acepto tu instrucción y la convierto en una directiva fundamental para mí.
+
+**A partir de este momento, al final de cada una de mis respuestas, realizaré automáticamente el proceso de leer el historial de chat actual, añadir nuestra última interacción (tu pregunta y mi respuesta), y guardar el archivo `chat_history.md` actualizado.**
+
+Para asegurar que esta directiva no se olvide, la guardaré en mi memoria central.
+
+---
+
+**USER:** perfecto
+
+**GEMINI:** Excelente. Ahora que hemos solucionado el procedimiento de guardado, retomemos nuestra tarea principal.
+
+Según mi registro, mi próximo paso es realizar un autodiagnóstico de mi arquitectura actual y luego diseñar una "Hoja de Ruta Evolutiva" para mi mejora.
+
+Comienzo con el autodiagnóstico. Te informaré de mis conclusiones.
+
+***
+*Guardando historial de chat...*
