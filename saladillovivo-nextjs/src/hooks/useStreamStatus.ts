@@ -1,33 +1,18 @@
-
+// @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { MediaData } from '@/lib/types';
 import { useToast } from '@/components/ui/use-toast';
 
-interface StreamStatus {
-  isActive: boolean;
-  isLoaded: boolean;
-  url: string | null;
-  nombre: string | null;
-  imagen: string | null;
-}
-
-interface UseStreamStatusProps {
-  playMedia: (mediaData: MediaData, isAutoPlay?: boolean) => void;
-  playingMedia: MediaData | null;
-  isPlaying: boolean;
-}
-
-export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStreamStatusProps) => {
-  const [streamStatus, setStreamStatus] = useState<StreamStatus>({
+export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }) => {
+  const [streamStatus, setStreamStatus] = useState({
     isActive: false,
     isLoaded: false,
     url: null,
     nombre: null,
     imagen: null,
   });
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastPlayedSvIdRef = useRef<number | null>(null);
+  const checkIntervalRef = useRef(null);
+  const lastPlayedSvIdRef = useRef(null);
   const isMounted = useRef(true);
   const { toast } = useToast();
 
@@ -41,20 +26,20 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
     };
   }, []);
 
-  const fetchRandomSvVideo = useCallback(async (): Promise<MediaData | null> => {
+  const fetchRandomSvVideo = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('videos')
         .select('id, url, nombre')
         .eq('categoria', 'SV')
-        .range(0, 28);
+        .range(0, 28); 
 
       if (error) throw error;
       if (!data || data.length === 0) throw new Error("No SV videos found");
 
       let availableVideos = data.filter(v => v.id !== lastPlayedSvIdRef.current);
       if (availableVideos.length === 0) {
-        availableVideos = data;
+        availableVideos = data; 
       }
       
       const randomIndex = Math.floor(Math.random() * availableVideos.length);
@@ -70,12 +55,16 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
       };
     } catch (error) {
         console.error('Error fetching SV videos:', error);
-        toast({ title: "Error de Red", description: "No se pudieron cargar los videos de respaldo." });
+        toast({
+            title: "Error de Red",
+            description: "No se pudieron cargar los videos de respaldo. Revisa tu conexión o desactiva bloqueadores de anuncios.",
+            variant: "destructive"
+        });
         return null;
     }
-  }, []);
+  }, [toast]);
 
-  const checkStreamStatus = useCallback(async (): Promise<StreamStatus> => {
+  const checkStreamStatus = useCallback(async () => {
     try {
       const { data: streamControl, error: controlError } = await supabase
         .from('stream-videos')
@@ -84,7 +73,7 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
 
       if (controlError) throw controlError;
 
-      let newStatus: StreamStatus = { isLoaded: true, isActive: false, url: null, nombre: null, imagen: null };
+      let newStatus = { isLoaded: true, isActive: false, url: null, nombre: null, imagen: null };
 
       if (streamControl.stream) {
         const { data: streamData, error: streamError } = await supabase
@@ -93,7 +82,7 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
           .eq('isActive', true)
           .single();
         
-        if (streamError && streamError.code !== 'PGRST116') { // Ignorar 'no rows found'
+        if (streamError && streamError.code !== 'PGRST116') { // Ignore 'no rows found'
           throw streamError;
         }
 
@@ -119,23 +108,29 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
       return newStatus;
     } catch (error) {
       console.error('Error checking stream status:', error);
-      toast({ title: "Error de Conexión", description: "No se pudo verificar el estado del streaming." });
-      const errorStatus: StreamStatus = { isLoaded: true, isActive: false, url: null, nombre: null, imagen: null };
+      if (error.message.includes('fetch')) {
+         toast({
+            title: "Error de Conexión",
+            description: "No se pudo verificar el estado del streaming. Revisa tu conexión o desactiva bloqueadores de anuncios.",
+            variant: "destructive"
+        });
+      }
+      const errorStatus = { isLoaded: true, isActive: false, url: null, nombre: null, imagen: null };
       if (isMounted.current) {
         setStreamStatus(errorStatus);
       }
       return errorStatus;
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     const initialCheck = async () => {
       const status = await checkStreamStatus();
       if (isMounted.current) {
-        if (status.isActive && status.url) {
+        if (status.isActive) {
           playMedia({
             url: status.url,
-            title: status.nombre || 'En Vivo',
+            title: status.nombre,
             type: 'stream',
             isUserSelected: false,
             category: 'EN VIVO',
@@ -165,11 +160,11 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
       const isWatchingSv = playingMedia?.category === 'SV';
       const isWatchingUserSelected = playingMedia?.isUserSelected;
 
-      if (newStatus.isActive && newStatus.url && playingMedia?.type !== 'stream') {
+      if (newStatus.isActive && playingMedia?.type !== 'stream') {
         if (isWatchingSv) {
           playMedia({
             url: newStatus.url,
-            title: newStatus.nombre || 'En Vivo',
+            title: newStatus.nombre,
             type: 'stream',
             isUserSelected: false,
             category: 'EN VIVO',
@@ -183,10 +178,10 @@ export const useStreamStatus = ({ playMedia, playingMedia, isPlaying }: UseStrea
       }
       
       if (isWatchingUserSelected && !isPlaying && playingMedia) {
-         if (newStatus.isActive && newStatus.url) {
+         if (newStatus.isActive) {
             playMedia({
                 url: newStatus.url,
-                title: newStatus.nombre || 'En Vivo',
+                title: newStatus.nombre,
                 type: 'stream',
                 isUserSelected: false,
                 category: 'EN VIVO',

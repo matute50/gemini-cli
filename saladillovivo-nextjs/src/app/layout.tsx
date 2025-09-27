@@ -9,6 +9,8 @@ export const metadata: Metadata = {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
+import Script from "next/script";
+import { MediaPlayerProvider } from "@/context/MediaPlayerContext";
 
 export default function RootLayout({
   children,
@@ -20,12 +22,15 @@ export default function RootLayout({
       <head>
       </head>
       <body className="bg-main-gradient">
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+        <MediaPlayerProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
           <Toaster />
-        </div>
+        </MediaPlayerProvider>
+        <Script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" strategy="afterInteractive" />
       </body>
     </html>
   );

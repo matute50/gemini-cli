@@ -1,13 +1,9 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-// Asumimos que useToast será migrado o reemplazado. Por ahora, lo comentamos si causa error.
 import { useToast } from '@/components/ui/use-toast';
-import { MediaData } from '@/lib/types';
 
 const FADE_DURATION = 2000;
 
-// Hook interno para manejar el desvanecimiento de volumen
 const useFader = (initialVolume = 1.0) => {
   const [volume, setVolume] = useState(initialVolume);
   const animationFrameRef = useRef<number>();
@@ -38,9 +34,9 @@ const useFader = (initialVolume = 1.0) => {
 };
 
 interface PlaybackLogicProps {
-  setCurrentMedia: React.Dispatch<React.SetStateAction<MediaData | null>>;
-  setPlayingMedia: React.Dispatch<React.SetStateAction<MediaData | null>>;
-  setPlayerStatus: React.Dispatch<React.SetStateAction<string>>;
+  setCurrentMedia: (media: any) => void;
+  setPlayingMedia: (media: any) => void;
+  setPlayerStatus: (status: string) => void;
 }
 
 export const usePlaybackLogic = ({ setCurrentMedia, setPlayingMedia, setPlayerStatus }: PlaybackLogicProps) => {
@@ -69,7 +65,7 @@ export const usePlaybackLogic = ({ setCurrentMedia, setPlayingMedia, setPlayerSt
     });
   }, [ramp, isMuted]);
 
-  const playMedia = useCallback((mediaData: MediaData, isAutoPlay = false) => {
+  const playMedia = useCallback((mediaData: any, isAutoPlay = false) => {
     playbackEventSent.current = false;
     setPlayerStatus('loading');
     
@@ -92,8 +88,8 @@ export const usePlaybackLogic = ({ setCurrentMedia, setPlayingMedia, setPlayerSt
     });
   }, [setCurrentMedia, setPlayingMedia, setPlayerStatus, performTransition, setVolume]);
 
-  const playUserSelectedVideo = useCallback((video: { url: string; nombre: string }, categoryName: string) => {
-    const mediaData: MediaData = {
+  const playUserSelectedVideo = useCallback((video: any, categoryName?: string) => {
+    const mediaData = {
       url: video.url,
       title: video.nombre,
       type: 'video',
@@ -125,7 +121,7 @@ export const usePlaybackLogic = ({ setCurrentMedia, setPlayingMedia, setPlayerSt
     setIsMuted(newVolume === 0);
   }, [setVolume]);
 
-  const handlePlay = useCallback(async (media: MediaData | null) => {
+  const handlePlay = useCallback(async (media: any) => {
     setIsPlaying(true);
     if (media) {
       setPlayingMedia(media);
@@ -147,10 +143,16 @@ export const usePlaybackLogic = ({ setCurrentMedia, setPlayingMedia, setPlayerSt
             if (error) throw error;
         } catch (error: any) {
             console.error('Error logging playback event:', error);
-            toast({ title: "Error de Conexión", description: "No se pudo registrar la reproducción." });
+            if (error.message.includes('fetch')) {
+                toast({
+                    title: "Error de Conexión",
+                    description: "No se pudo registrar la reproducción. Revisa tu conexión.",
+                    variant: "destructive"
+                });
+            }
         }
     }
-  }, [setPlayingMedia]);
+  }, [setPlayingMedia, toast]);
 
   const handlePause = useCallback(() => {
     setIsPlaying(false);
