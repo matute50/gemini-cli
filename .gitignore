@@ -1,5 +1,6 @@
 # Archivos y directorios temporales
 .tmp.driveupload/
+.npm-cache/
 
 # Dependencias de proyectos
 **/node_modules/
