@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "npx vite build"
+    "build": "npx vite build",
     "postbuild": "",
     "preview": "vite preview"
   },

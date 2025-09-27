@@ -229,15 +229,15 @@ const DesktopLayout = ({ data, openModal, isMobile }) => {
           <section className="grid grid-cols-1 lg:grid-cols-5 gap-6" aria-label="Sección de noticias">
               <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4">
                   {mainFeaturedNews && <div className="lg:col-span-2 lg:row-span-2 h-full">
-                      <FeaturedNewsSection mainFeaturedNews={mainFeaturedNews} openModal={openModal} />
+                      <FeaturedNewsSection mainFeaturedNews={mainFeaturedNews} />
                     </div>}
                   
                   {newsForGrid.slice(0, 2).map(noticia => <div key={noticia.id} className="lg:col-span-1 h-full">
-                        <SecondaryNewsCard newsItem={noticia} openModal={openModal} />
+                        <SecondaryNewsCard newsItem={noticia} />
                       </div>)}
 
                   {newsForGrid.slice(2).map((noticia, index) => <div key={noticia.id} className="lg:col-span-1 h-full">
-                      <SecondaryNewsCard newsItem={noticia} openModal={openModal} index={index} />
+                      <SecondaryNewsCard newsItem={noticia} index={index} />
                     </div>)}
               </div>
 

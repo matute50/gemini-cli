@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -18,36 +19,37 @@ const formatDate = (dateString) => {
   }
 };
 
-const FeaturedNewsSection = ({ mainFeaturedNews, openModal, isMobile = false }) => {
+const FeaturedNewsSection = ({ mainFeaturedNews, isMobile = false }) => {
   if (!mainFeaturedNews) return null;
 
   if (isMobile) {
     return (
-      <article
-        className="w-full card card-blur shadow-strong cursor-pointer overflow-hidden group/featured"
-        onClick={() => openModal(mainFeaturedNews)}
-        aria-label={`Noticia destacada: ${mainFeaturedNews.titulo}`}
-      >
-        <div className="news-image-container relative aspect-[16/10]">
-          <Image 
-            loading="lazy"
-            className="w-full h-full object-cover"
-            alt={`Imagen de: ${mainFeaturedNews.titulo}`}
-            src={mainFeaturedNews.imageUrl} 
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div className="date-on-image">
-            <Calendar size={12} className="inline-block mr-1" />
-            {formatDate(mainFeaturedNews.fecha)}
+      <Link href={`/noticia/${mainFeaturedNews.slug}`} passHref>
+        <article
+          className="w-full card card-blur shadow-strong cursor-pointer overflow-hidden group/featured"
+          aria-label={`Noticia destacada: ${mainFeaturedNews.titulo}`}
+        >
+          <div className="news-image-container relative aspect-[16/10]">
+            <Image 
+              loading="lazy"
+              className="w-full h-full object-cover"
+              alt={`Imagen de: ${mainFeaturedNews.titulo}`}
+              src={mainFeaturedNews.imageUrl} 
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            <div className="date-on-image">
+              <Calendar size={12} className="inline-block mr-1" />
+              {formatDate(mainFeaturedNews.fecha)}
+            </div>
           </div>
-        </div>
-        <div className="p-2">
-          <h3 className="font-futura-bold text-sm text-card-foreground line-clamp-3 group-hover/featured:text-primary transition-colors">
-            {mainFeaturedNews.titulo}
-          </h3>
-        </div>
-      </article>
+          <div className="p-2">
+            <h3 className="font-futura-bold text-sm text-card-foreground line-clamp-3 group-hover/featured:text-primary transition-colors">
+              {mainFeaturedNews.titulo}
+            </h3>
+          </div>
+        </article>
+      </Link>
     );
   }
 
@@ -59,30 +61,33 @@ const FeaturedNewsSection = ({ mainFeaturedNews, openModal, isMobile = false }) 
       className="w-full card card-blur featured-news-card overflow-hidden flex flex-col h-full group/featured shadow-strong"
       aria-label="Noticia destacada"
     >
-      <div className="news-image-container relative cursor-pointer flex-shrink-0" onClick={() => openModal(mainFeaturedNews)}>
-        <div className="aspect-video w-full relative">
-          <Image 
-            className="w-full h-full object-cover"
-            alt={`Imagen de la noticia destacada: ${mainFeaturedNews.titulo}`}
-            src={mainFeaturedNews.imageUrl} 
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
+      <Link href={`/noticia/${mainFeaturedNews.slug}`} passHref>
+        <div className="news-image-container relative cursor-pointer flex-shrink-0">
+          <div className="aspect-video w-full relative">
+            <Image 
+              className="w-full h-full object-cover"
+              alt={`Imagen de la noticia destacada: ${mainFeaturedNews.titulo}`}
+              src={mainFeaturedNews.imageUrl} 
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+          <div className="date-on-image">
+            <Calendar size={12} className="inline-block mr-1" />
+            {formatDate(mainFeaturedNews.fecha)}
+          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-        <div className="date-on-image">
-          <Calendar size={12} className="inline-block mr-1" />
-          {formatDate(mainFeaturedNews.fecha)}
-        </div>
-      </div>
+      </Link>
       <div className="p-2 flex flex-col mt-2">
-        <h1 
-          className="font-futura-bold text-lg md:text-xl mb-2 text-card-foreground transition-colors cursor-pointer line-clamp-4"
-          onClick={() => openModal(mainFeaturedNews)}
-        >
-          {mainFeaturedNews.titulo}
-        </h1>
+        <Link href={`/noticia/${mainFeaturedNews.slug}`} passHref>
+          <h1 
+            className="font-futura-bold text-lg md:text-xl mb-2 text-card-foreground transition-colors cursor-pointer line-clamp-4"
+          >
+            {mainFeaturedNews.titulo}
+          </h1>
+        </Link>
       </div>
     </motion.article>
   );
